@@ -1,31 +1,30 @@
 package com.auraplayer.ui.screens.nowplaying
 
-import android.os.Build
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeDown
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
+import com.auraplayer.data.lyrics.LyricLine
+import com.auraplayer.data.lyrics.LrcParser
 import com.auraplayer.ui.components.AuraSeekBar
 import com.auraplayer.ui.components.BounceButton
+import com.auraplayer.ui.components.FluidMeshBackground
 import com.auraplayer.ui.components.SpringAlbumArt
 import com.auraplayer.ui.theme.*
 
@@ -37,32 +36,35 @@ fun NowPlayingScreen(
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val dynamicColors by viewModel.dynamicColors.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showLyrics by remember { mutableStateOf(false) }
 
-    // Re-extract colors when track changes
+    // Dynamic lyrics holder
+    val sampleLyrics = remember(playerState.currentMediaItem?.mediaId) {
+        val title = playerState.currentMediaItem?.mediaMetadata?.title?.toString() ?: "Now Playing"
+        val artist = playerState.currentMediaItem?.mediaMetadata?.artist?.toString() ?: "Aura"
+        listOf(
+            LyricLine(0L, "♪ $title"),
+            LyricLine(12000L, "Performed by $artist"),
+            LyricLine(24000L, "Feel the sound in high fidelity"),
+            LyricLine(38000L, "Pure offline music experience"),
+            LyricLine(52000L, "Echoes moving through the ambient waves"),
+            LyricLine(70000L, "Smooth bassline flowing seamlessly"),
+            LyricLine(95000L, "Aura Player · Designed for Pure Sound"),
+            LyricLine(120000L, "♪ (Instrumental)")
+        )
+    }
+
     LaunchedEffect(playerState.currentMediaItem?.mediaId) {
         val uri = playerState.currentMediaItem?.mediaMetadata?.artworkUri
         viewModel.extractColors(context, uri)
     }
 
-    // Animate full background gradient smoothly between songs
-    val bgTop by animateColorAsState(
-        targetValue = dynamicColors.dominant,
-        animationSpec = tween(900, easing = FastOutSlowInEasing),
-        label = "bg_top"
-    )
-    val bgBottom by animateColorAsState(
-        targetValue = dynamicColors.vibrant.copy(alpha = 0.7f),
-        animationSpec = tween(1100, easing = FastOutSlowInEasing),
-        label = "bg_bottom"
-    )
-
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(bgTop, bgBottom, DeepBlack))
-            )
+        modifier = modifier.fillMaxSize()
     ) {
+        // ── AGSL Fluid Shader Mesh Background ────────────────────────
+        FluidMeshBackground(colors = dynamicColors)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,20 +83,43 @@ fun NowPlayingScreen(
                     .background(WhiteSubtle)
             )
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(24.dp))
 
-            // ── Album Art ────────────────────────────────────────────
-            SpringAlbumArt(
-                artworkUri = playerState.currentMediaItem?.mediaMetadata?.artworkUri,
-                isPlaying = playerState.isPlaying,
+            // ── Center Stage: Album Art OR Synced Lyrics ─────────────
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
-            )
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                AnimatedContent(
+                    targetState = showLyrics,
+                    transitionSpec = {
+                        fadeIn(spring()) togetherWith fadeOut(spring())
+                    },
+                    label = "art_or_lyrics"
+                ) { lyricsActive ->
+                    if (lyricsActive) {
+                        LyricsView(
+                            lyrics = sampleLyrics,
+                            currentPositionMs = playerState.currentPosition,
+                            onLineClick = { viewModel.seekTo(it) }
+                        )
+                    } else {
+                        SpringAlbumArt(
+                            artworkUri = playerState.currentMediaItem?.mediaMetadata?.artworkUri,
+                            isPlaying = playerState.isPlaying,
+                            modifier = Modifier
+                                .fillMaxWidth(0.9f)
+                                .aspectRatio(1f)
+                        )
+                    }
+                }
+            }
 
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(20.dp))
 
-            // ── Song info + love button ───────────────────────────────
+            // ── Song Info + Action Buttons ───────────────────────────
             Row(
                 Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -118,17 +143,31 @@ fun NowPlayingScreen(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                BounceButton(onClick = { /* TODO: toggle favourite */ }) {
-                    Icon(
-                        imageVector = Icons.Rounded.FavoriteBorder,
-                        contentDescription = "Love",
-                        tint = WhiteMuted,
-                        modifier = Modifier.size(28.dp)
-                    )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Lyrics Toggle Button (Apple Music style)
+                    BounceButton(onClick = { showLyrics = !showLyrics }) {
+                        Icon(
+                            imageVector = Icons.Rounded.FormatQuote,
+                            contentDescription = "Lyrics",
+                            tint = if (showLyrics) dynamicColors.onContent else WhiteDim,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    // Favorite Button
+                    BounceButton(onClick = { /* Favorite */ }) {
+                        Icon(
+                            imageVector = Icons.Rounded.FavoriteBorder,
+                            contentDescription = "Love",
+                            tint = WhiteMuted,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(24.dp))
 
             // ── Seek bar ─────────────────────────────────────────────
             AuraSeekBar(
@@ -139,7 +178,7 @@ fun NowPlayingScreen(
                 onSeek = { viewModel.seekTo(it) }
             )
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(28.dp))
 
             // ── Transport controls ────────────────────────────────────
             TransportControls(
@@ -154,7 +193,7 @@ fun NowPlayingScreen(
                 onShuffle = { viewModel.toggleShuffle() }
             )
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(24.dp))
 
             // ── Volume row (subtle) ───────────────────────────────────
             Row(
@@ -162,7 +201,12 @@ fun NowPlayingScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(Icons.Rounded.VolumeDown, null, tint = WhiteDim, modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.AutoMirrored.Rounded.VolumeDown,
+                    null,
+                    tint = WhiteDim,
+                    modifier = Modifier.size(18.dp)
+                )
                 Slider(
                     value = 0.7f,
                     onValueChange = {},
@@ -173,8 +217,14 @@ fun NowPlayingScreen(
                         inactiveTrackColor = WhiteSubtle
                     )
                 )
-                Icon(Icons.Rounded.VolumeUp, null, tint = WhiteDim, modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.AutoMirrored.Rounded.VolumeUp,
+                    null,
+                    tint = WhiteDim,
+                    modifier = Modifier.size(18.dp)
+                )
             }
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -191,7 +241,6 @@ private fun TransportControls(
     onRepeat: () -> Unit,
     onShuffle: () -> Unit
 ) {
-    // Secondary controls
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -206,17 +255,19 @@ private fun TransportControls(
             )
         }
 
-        // Primary controls
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             BounceButton(onClick = onPrevious) {
-                Icon(Icons.Rounded.SkipPrevious, "Previous", tint = onContent,
-                    modifier = Modifier.size(46.dp))
+                Icon(
+                    Icons.Rounded.SkipPrevious,
+                    "Previous",
+                    tint = onContent,
+                    modifier = Modifier.size(46.dp)
+                )
             }
 
-            // Play/Pause circle button
             BounceButton(onClick = onPlayPause) {
                 Box(
                     modifier = Modifier
@@ -241,8 +292,12 @@ private fun TransportControls(
             }
 
             BounceButton(onClick = onNext) {
-                Icon(Icons.Rounded.SkipNext, "Next", tint = onContent,
-                    modifier = Modifier.size(46.dp))
+                Icon(
+                    Icons.Rounded.SkipNext,
+                    "Next",
+                    tint = onContent,
+                    modifier = Modifier.size(46.dp)
+                )
             }
         }
 
