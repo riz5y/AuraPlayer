@@ -33,7 +33,9 @@ private val navScreens = listOf(Screen.Library, Screen.Search, Screen.Settings)
 fun AuraNavigation(
     controllerManager: AuraMediaControllerManager,
     songRepository: SongRepository,
-    billingManager: BillingManager
+    billingManager: BillingManager,
+    adManager: com.auraplayer.ads.AdManager? = null,
+    equalizerManager: com.auraplayer.core.audio.EqualizerManager? = null
 ) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
@@ -81,7 +83,9 @@ fun AuraNavigation(
                 LibraryScreen(
                     controllerManager = controllerManager,
                     songRepository = songRepository,
-                    billingManager = billingManager
+                    billingManager = billingManager,
+                    adManager = adManager,
+                    equalizerManager = equalizerManager
                 )
             }
             composable(Screen.Search.route) {
@@ -89,13 +93,17 @@ fun AuraNavigation(
                 LibraryScreen(
                     controllerManager = controllerManager,
                     songRepository = songRepository,
-                    billingManager = billingManager
+                    billingManager = billingManager,
+                    adManager = adManager,
+                    equalizerManager = equalizerManager
                 )
             }
             composable(Screen.Settings.route) {
                 com.auraplayer.ui.screens.settings.SettingsScreen(
                     songRepository = songRepository,
-                    billingManager = billingManager
+                    billingManager = billingManager,
+                    equalizerManager = equalizerManager,
+                    adManager = adManager
                 )
             }
         }

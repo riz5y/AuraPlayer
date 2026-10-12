@@ -24,10 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Brush
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.auraplayer.ads.AdManager
+import com.auraplayer.core.audio.EqualizerManager
 import com.auraplayer.core.billing.BillingManager
 import com.auraplayer.domain.repository.SongRepository
 import com.auraplayer.ui.components.BounceButton
 import com.auraplayer.core.transfer.WifiTransferServer
+import com.auraplayer.ui.screens.equalizer.EqualizerSheet
 import com.auraplayer.ui.screens.library.MusicImportSheet
 import com.auraplayer.ui.screens.library.WifiCloudTransferSheet
 import com.auraplayer.ui.screens.pro.ProPaywallSheet
@@ -38,6 +41,8 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     songRepository: SongRepository,
     billingManager: BillingManager,
+    equalizerManager: EqualizerManager? = null,
+    adManager: AdManager? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -46,6 +51,7 @@ fun SettingsScreen(
 
     val isPro by billingManager.isProUser.collectAsStateWithLifecycle()
     var showProPaywall by remember { mutableStateOf(false) }
+    var showEqualizerSheet by remember { mutableStateOf(false) }
     var showImportSheet by remember { mutableStateOf(false) }
     var showWifiCloudSheet by remember { mutableStateOf(false) }
 
@@ -152,12 +158,11 @@ fun SettingsScreen(
         // ── 1. Audio & Fidelity Section ──────────────────────────────
         SettingsSectionHeader("AUDIO & FIDELITY")
         SettingsCard {
-            SettingsDropdownRow(
+            SettingsActionRow(
                 icon = Icons.Rounded.GraphicEq,
-                title = "Equalizer Preset",
-                currentValue = selectedPreset,
-                options = listOf("Club & Bass", "Vocal Clarity", "Electronic", "Studio Flat", "Bass Booster", "Acoustic Warmth"),
-                onSelect = { selectedPreset = it }
+                title = "Studio 5-Band Hardware EQ",
+                subtitle = "Custom frequency curves, bass boost & 3D spatializer",
+                onClick = { showEqualizerSheet = true }
             )
 
             HorizontalDivider(color = Outline, thickness = 0.5.dp)
@@ -369,6 +374,14 @@ fun SettingsScreen(
         ProPaywallSheet(
             billingManager = billingManager,
             onDismiss = { showProPaywall = false }
+        )
+    }
+
+    if (showEqualizerSheet && equalizerManager != null && adManager != null) {
+        EqualizerSheet(
+            equalizerManager = equalizerManager,
+            adManager = adManager,
+            onDismiss = { showEqualizerSheet = false }
         )
     }
 

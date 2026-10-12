@@ -39,9 +39,9 @@ fun SplashScreen(
     )
 
     LaunchedEffect(Unit) {
-        delay(1500)
+        delay(1200)
         (context as? Activity)?.let { activity ->
-            adManager.showSplashAdIfReady(activity) {
+            adManager.loadAndShowSplashAd(activity, timeoutMs = 3500L) {
                 onComplete()
             }
         } ?: onComplete()

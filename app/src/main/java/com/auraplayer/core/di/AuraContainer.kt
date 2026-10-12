@@ -38,4 +38,8 @@ class AuraContainer(private val context: Context) {
     val wifiTransferServer: com.auraplayer.core.transfer.WifiTransferServer by lazy {
         com.auraplayer.core.transfer.WifiTransferServer(context)
     }
+
+    val equalizerManager: com.auraplayer.core.audio.EqualizerManager by lazy {
+        com.auraplayer.core.audio.EqualizerManager(context)
+    }
 }

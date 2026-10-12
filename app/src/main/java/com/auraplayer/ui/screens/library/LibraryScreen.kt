@@ -41,7 +41,14 @@ import com.auraplayer.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
 import com.auraplayer.core.billing.BillingManager
+import com.auraplayer.ads.AdManager
+import com.auraplayer.core.audio.EqualizerManager
+import com.auraplayer.ui.screens.equalizer.EqualizerSheet
 import com.auraplayer.ui.screens.pro.ProPaywallSheet
+import androidx.compose.foundation.border
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.sp
 import com.auraplayer.domain.repository.SongRepository
 
 @Composable
@@ -49,6 +56,8 @@ fun LibraryScreen(
     controllerManager: AuraMediaControllerManager,
     songRepository: SongRepository,
     billingManager: BillingManager,
+    adManager: AdManager? = null,
+    equalizerManager: EqualizerManager? = null,
     modifier: Modifier = Modifier,
     viewModel: LibraryViewModel = viewModel(
         factory = LibraryViewModel.provideFactory(songRepository)
@@ -61,6 +70,7 @@ fun LibraryScreen(
     var showSearch by remember { mutableStateOf(false) }
     var showProPaywall by remember { mutableStateOf(false) }
     var showImportSheet by remember { mutableStateOf(false) }
+    var showEqualizerSheet by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     Column(
@@ -116,54 +126,21 @@ fun LibraryScreen(
             Spacer(Modifier.width(12.dp))
 
             if (!showSearch) {
+                // Custom Equalizer Button
+                BounceIconButton(
+                    icon = Icons.Rounded.GraphicEq,
+                    onClick = { showEqualizerSheet = true }
+                )
+
+                Spacer(Modifier.width(12.dp))
+
                 // Import Music Button
                 BounceIconButton(
                     icon = Icons.Rounded.CloudUpload,
                     onClick = { showImportSheet = true }
                 )
 
-                Spacer(Modifier.width(8.dp))
-
-                // Pro Badge
-                com.auraplayer.ui.components.BounceButton(
-                    onClick = { showProPaywall = true }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isPro)
-                                    androidx.compose.ui.graphics.Brush.linearGradient(
-                                        listOf(Color(0xFFFFD700), Color(0xFFFFA500))
-                                    )
-                                else
-                                    androidx.compose.ui.graphics.SolidColor(SurfaceElevated)
-                            )
-                            .padding(horizontal = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.WorkspacePremium,
-                                contentDescription = "Pro",
-                                tint = if (isPro) DeepBlack else Color(0xFFFFD700),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                text = "PRO",
-                                color = if (isPro) DeepBlack else White,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(12.dp))
             }
 
             BounceIconButton(
@@ -200,6 +177,80 @@ fun LibraryScreen(
                     border = null,
                     shape = CircleShape
                 )
+            }
+        }
+
+        // ── Spotify-Style Aura Pro Top Promo Banner ───────────────────
+        if (!isPro) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceElevated),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 12.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { showProPaywall = true }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                listOf(Color(0xFF2E2405), Color(0xFF1B1B22))
+                            )
+                        )
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(
+                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                    listOf(Color(0xFFFFD700), Color(0xFFFFA500))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.WorkspacePremium,
+                            contentDescription = null,
+                            tint = DeepBlack,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Upgrade to Aura Pro",
+                            color = White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "Zero ads · 5-Band Studio EQ · Lossless sound",
+                            color = WhiteMuted,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color(0xFFFFD700))
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "Get Pro",
+                            color = DeepBlack,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
             }
         }
 
@@ -257,9 +308,28 @@ fun LibraryScreen(
             )
         }
 
-        // ── AdMob Banner (above mini-player, suppressed for Pro) ─────
+        if (showEqualizerSheet && equalizerManager != null && adManager != null) {
+            EqualizerSheet(
+                equalizerManager = equalizerManager,
+                adManager = adManager,
+                onDismiss = { showEqualizerSheet = false }
+            )
+        }
+
+        // ── AdMob Banner (Framed clean Spotify-style container) ───────
         if (!isPro) {
-            BannerAdView()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Surface)
+                    .border(0.5.dp, Outline, RoundedCornerShape(14.dp))
+                    .padding(vertical = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                BannerAdView()
+            }
         }
     }
 }
@@ -323,7 +393,13 @@ private fun SongRow(song: Song, onClick: () -> Unit) {
 
 @Composable
 private fun BounceIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    com.auraplayer.ui.components.BounceButton(onClick = onClick) {
+    val haptic = LocalHapticFeedback.current
+    com.auraplayer.ui.components.BounceButton(
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        }
+    ) {
         Icon(icon, contentDescription = null, tint = White, modifier = Modifier.size(24.dp))
     }
 }
