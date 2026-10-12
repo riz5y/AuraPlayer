@@ -1,0 +1,27 @@
+# Android
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cimake
+/app/build/
+/app/release/
+
+# Kotlin
+*.class
+
+# Secrets — NEVER commit these
+google-services.json
+keystore.jks
+*.keystore
+local.properties
+
+# Gradle wrapper (optional to include — we exclude for clean repo)
+gradle/wrapper/gradle-wrapper.jar
+
+# OS
+Thumbs.db

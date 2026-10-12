@@ -1,0 +1,38 @@
+package com.auraplayer.ui.screens.library
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.auraplayer.domain.model.Song
+import com.auraplayer.domain.repository.SongRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class LibraryViewModel @Inject constructor(
+    private val repo: SongRepository
+) : ViewModel() {
+
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query.asStateFlow()
+
+    private val _filter = MutableStateFlow(LibraryFilter.SONGS)
+    val filter: StateFlow<LibraryFilter> = _filter.asStateFlow()
+
+    val songs: StateFlow<List<Song>> = _query
+        .debounce(300)
+        .flatMapLatest { q ->
+            if (q.isBlank()) repo.getAllSongs() else repo.search(q)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    init {
+        viewModelScope.launch { repo.syncWithMediaStore() }
+    }
+
+    fun onQueryChange(q: String) { _query.value = q }
+    fun onFilterChange(f: LibraryFilter) { _filter.value = f }
+}
+
+enum class LibraryFilter { SONGS, ALBUMS, ARTISTS, PLAYLISTS }
