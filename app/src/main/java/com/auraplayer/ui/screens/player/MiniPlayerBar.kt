@@ -4,6 +4,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import coil3.request.crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,6 +53,7 @@ fun MiniPlayerBar(
     /** 0f = fully collapsed (mini), 1f = fully expanded (full screen) */
     sheetProgress: Float,
     modifier: Modifier = Modifier,
+    onExpand: () -> Unit = {},
     onPlayPause: () -> Unit,
     onSkipNext: () -> Unit,
 ) {
@@ -62,34 +65,38 @@ fun MiniPlayerBar(
     )
 
     // Fade out mini-player content as sheet expands
-    val contentAlpha = (1f - sheetProgress * 2.5f).coerceIn(0f, 1f)
+    val contentAlpha = (1f - sheetProgress * 3.5f).coerceIn(0f, 1f)
 
     // Progress fraction
     val progress = if (playerState.duration > 0L)
         (playerState.currentPosition / playerState.duration.toFloat()).coerceIn(0f, 1f)
     else 0f
 
-    // Animate gradient colors from album art
-    val bgStart by animateColorAsState(
-        targetValue = dynamicColors.dominant,
-        animationSpec = tween(800),
-        label = "bg_start"
-    )
-    val bgEnd by animateColorAsState(
-        targetValue = dynamicColors.vibrant,
-        animationSpec = tween(1000),
-        label = "bg_end"
-    )
+    val isIdle = playerState.currentMediaItem == null
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(72.dp)
             .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius))
-            .background(
-                Brush.horizontalGradient(listOf(bgStart, bgEnd))
-            )
+            .clickable(enabled = contentAlpha > 0.05f, onClick = onExpand)
+            .graphicsLayer {
+                alpha = contentAlpha
+            }
     ) {
+        // Water liquid background
+        com.auraplayer.ui.components.FluidMeshBackground(
+            colors = dynamicColors,
+            isIdle = isIdle,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Semi-transparent glass overlay for readability
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.25f))
+        )
         // ── Main content row ─────────────────────────────────────────
         Row(
             modifier = Modifier

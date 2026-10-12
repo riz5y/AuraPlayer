@@ -89,9 +89,7 @@ fun AuraNavigation(
                 )
             }
             composable(Screen.Settings.route) {
-                // Phase 5 — Settings placeholder
-                LibraryScreen(
-                    controllerManager = controllerManager,
+                com.auraplayer.ui.screens.settings.SettingsScreen(
                     songRepository = songRepository
                 )
             }

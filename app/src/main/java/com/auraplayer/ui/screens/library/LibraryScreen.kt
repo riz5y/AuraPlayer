@@ -145,27 +145,44 @@ fun LibraryScreen(
             }
         }
 
-        // ── Song list ─────────────────────────────────────────────────
-        LazyColumn(
-            contentPadding = PaddingValues(bottom = 160.dp), // space for mini-player
-            modifier = Modifier.weight(1f)
-        ) {
-            items(songs, key = { it.id }) { song ->
-                SongRow(
-                    song = song,
-                    onClick = {
-                        playSong(controllerManager, songs, song)
-                    }
-                )
-            }
+        var selectedAlbum by remember { mutableStateOf<AlbumItem?>(null) }
 
-            if (songs.isEmpty()) {
-                item {
-                    Box(Modifier.fillParentMaxSize(), Alignment.Center) {
-                        Text("No songs found", color = WhiteDim)
+        // ── Main Content Switcher ─────────────────────────────────────
+        if (filter == LibraryFilter.ALBUMS) {
+            AlbumsGrid(
+                songs = songs,
+                onAlbumClick = { selectedAlbum = it },
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            // Song list
+            LazyColumn(
+                contentPadding = PaddingValues(bottom = 160.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(songs, key = { it.id }) { song ->
+                    SongRow(
+                        song = song,
+                        onClick = { playSong(controllerManager, songs, song) }
+                    )
+                }
+
+                if (songs.isEmpty()) {
+                    item {
+                        Box(Modifier.fillParentMaxSize(), Alignment.Center) {
+                            Text("No songs found", color = WhiteDim)
+                        }
                     }
                 }
             }
+        }
+
+        selectedAlbum?.let { album ->
+            AlbumDetailSheet(
+                album = album,
+                controllerManager = controllerManager,
+                onDismiss = { selectedAlbum = null }
+            )
         }
 
         // ── AdMob Banner (above mini-player) ─────────────────────────

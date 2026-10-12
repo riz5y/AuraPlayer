@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.auraplayer.ui.screens.nowplaying.NowPlayingScreen
@@ -66,33 +68,44 @@ fun ExpandablePlayerSheet(
         }
     }
 
+    val coroutineScope = rememberCoroutineScope()
+
     BottomSheetScaffold(
         scaffoldState = sheetState,
         sheetPeekHeight = 72.dp + WindowInsets.navigationBars
             .asPaddingValues().calculateBottomPadding(),
-        // Transparent container — we paint our own gradient inside MiniPlayerBar
         sheetContainerColor = Color.Transparent,
         sheetShadowElevation = 0.dp,
-        sheetDragHandle = null,   // we use our own handle inside NowPlayingScreen
+        sheetDragHandle = null,
         sheetContent = {
             Box(modifier = Modifier.fillMaxSize()) {
-
-                // Full-screen Now Playing (fades IN as sheet expands)
-                if (sheetProgress > 0.05f) {
+                // Full-screen Now Playing (crossfades in as sheet expands)
+                if (sheetProgress > 0.02f) {
                     NowPlayingScreen(
                         viewModel = viewModel,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                alpha = sheetProgress
+                            }
                     )
                 }
 
-                // Mini-player (fades OUT as sheet expands)
-                MiniPlayerBar(
-                    playerState = playerState,
-                    dynamicColors = dynamicColors,
-                    sheetProgress = sheetProgress,
-                    onPlayPause = { viewModel.playPause() },
-                    onSkipNext = { viewModel.skipNext() }
-                )
+                // Mini-player (crossfades out as sheet expands)
+                if (sheetProgress < 0.95f) {
+                    MiniPlayerBar(
+                        playerState = playerState,
+                        dynamicColors = dynamicColors,
+                        sheetProgress = sheetProgress,
+                        onExpand = {
+                            coroutineScope.launch {
+                                sheetState.bottomSheetState.expand()
+                            }
+                        },
+                        onPlayPause = { viewModel.playPause() },
+                        onSkipNext = { viewModel.skipNext() }
+                    )
+                }
             }
         }
     ) { paddingValues ->

@@ -63,7 +63,10 @@ fun NowPlayingScreen(
         modifier = modifier.fillMaxSize()
     ) {
         // ── AGSL Fluid Shader Mesh Background ────────────────────────
-        FluidMeshBackground(colors = dynamicColors)
+        FluidMeshBackground(
+            colors = dynamicColors,
+            isIdle = playerState.currentMediaItem == null
+        )
 
         Column(
             modifier = Modifier
