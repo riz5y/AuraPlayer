@@ -6,21 +6,8 @@ import android.util.Log
 import com.google.android.gms.ads.*
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
-
-/**
- * Manages all AdMob ad loading and showing.
- *
- * Strategy:
- *  1. Splash Interstitial  — shown once per cold start (after splash screen)
- *  2. Session Interstitial — shown after N skips/20 min, never during playback
- *  3. Banner              — shown in LibraryScreen, hidden in full NowPlaying
- */
-@Singleton
-class AdManager @Inject constructor(
-    @ApplicationContext private val context: Context
+class AdManager(
+    private val context: Context
 ) {
     companion object {
         // ⚠️ Replace with real ad unit IDs before release

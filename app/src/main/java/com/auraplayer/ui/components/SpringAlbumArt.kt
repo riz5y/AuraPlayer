@@ -55,7 +55,7 @@ fun SpringAlbumArt(
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(artworkUri)
-                .crossfade(400)
+                .crossfade(true)
                 .build(),
             contentDescription = "Album Art",
             contentScale = ContentScale.Crop,

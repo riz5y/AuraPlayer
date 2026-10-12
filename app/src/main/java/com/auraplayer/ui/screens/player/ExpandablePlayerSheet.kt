@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.auraplayer.ui.screens.nowplaying.NowPlayingScreen
 import com.auraplayer.ui.screens.nowplaying.NowPlayingViewModel
@@ -32,10 +32,16 @@ import com.auraplayer.ui.screens.nowplaying.NowPlayingViewModel
  *  - 28dp corners when collapsed, 20dp when expanded
  *  - Glowing progress bar on mini-player
  */
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.auraplayer.service.AuraMediaControllerManager
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpandablePlayerSheet(
-    viewModel: NowPlayingViewModel = hiltViewModel(),
+    controllerManager: AuraMediaControllerManager,
+    viewModel: NowPlayingViewModel = viewModel(
+        factory = NowPlayingViewModel.provideFactory(controllerManager)
+    ),
     content: @Composable () -> Unit
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()

@@ -1,7 +1,14 @@
 package com.auraplayer
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
+import com.auraplayer.core.di.AuraContainer
 
-@HiltAndroidApp
-class AuraApplication : Application()
+class AuraApplication : Application() {
+    lateinit var container: AuraContainer
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+        container = AuraContainer(this)
+    }
+}

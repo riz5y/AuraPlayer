@@ -1,6 +1,8 @@
 package com.auraplayer.ui.screens.player
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import coil3.request.crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -100,7 +102,7 @@ fun MiniPlayerBar(
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(playerState.currentMediaItem?.mediaMetadata?.artworkUri)
-                    .crossfade(300)
+                    .crossfade(true)
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,

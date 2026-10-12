@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import com.auraplayer.ui.components.AuraSeekBar
@@ -31,7 +31,8 @@ import com.auraplayer.ui.theme.*
 
 @Composable
 fun NowPlayingScreen(
-    viewModel: NowPlayingViewModel = hiltViewModel()
+    viewModel: NowPlayingViewModel,
+    modifier: Modifier = Modifier
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val dynamicColors by viewModel.dynamicColors.collectAsStateWithLifecycle()
@@ -56,7 +57,7 @@ fun NowPlayingScreen(
     )
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(listOf(bgTop, bgBottom, DeepBlack))

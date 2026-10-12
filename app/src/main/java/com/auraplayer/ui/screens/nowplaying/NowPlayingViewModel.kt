@@ -1,8 +1,11 @@
 package com.auraplayer.ui.screens.nowplaying
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -10,20 +13,27 @@ import androidx.palette.graphics.Palette
 import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
+import coil3.request.bitmapConfig
 import coil3.toBitmap
 import com.auraplayer.service.AuraMediaControllerManager
-import com.auraplayer.ui.theme.*
-import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.withContext
 
-@HiltViewModel
-class NowPlayingViewModel @Inject constructor(
+class NowPlayingViewModel(
     private val controllerManager: AuraMediaControllerManager
 ) : ViewModel() {
+
+    companion object {
+        fun provideFactory(manager: AuraMediaControllerManager): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    NowPlayingViewModel(manager) as T
+            }
+    }
 
     val controller = controllerManager.controller
 
@@ -53,16 +63,17 @@ class NowPlayingViewModel @Inject constructor(
     }
 
     fun extractColors(context: Context, artworkUri: Uri?) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val colors = runCatching {
                 val loader = ImageLoader(context)
                 val req = ImageRequest.Builder(context)
                     .data(artworkUri)
                     .size(200)
-                    .allowHardware(false)
+                    .bitmapConfig(Bitmap.Config.ARGB_8888)
                     .build()
-                val bitmap = (loader.execute(req) as? SuccessResult)
-                    ?.image?.toBitmap() ?: return@runCatching DynamicColors()
+                val result = loader.execute(req)
+                val bitmap = (result as? SuccessResult)?.image?.toBitmap()
+                    ?: return@runCatching DynamicColors()
 
                 val palette = Palette.from(bitmap).generate()
                 DynamicColors(
@@ -73,7 +84,9 @@ class NowPlayingViewModel @Inject constructor(
                         Color.White else Color.Black
                 )
             }.getOrDefault(DynamicColors())
-            _dynamicColors.value = colors
+            withContext(Dispatchers.Main) {
+                _dynamicColors.value = colors
+            }
         }
     }
 

@@ -8,9 +8,6 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import dagger.hilt.android.AndroidEntryPoint
-
-@AndroidEntryPoint
 class AuraMediaSessionService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null

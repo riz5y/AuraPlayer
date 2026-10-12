@@ -17,6 +17,9 @@ import com.auraplayer.service.AuraMediaControllerManager
 import com.auraplayer.ui.screens.library.LibraryScreen
 import com.auraplayer.ui.theme.*
 
+import androidx.compose.ui.unit.dp
+import com.auraplayer.domain.repository.SongRepository
+
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Library : Screen("library", "Library", Icons.Rounded.LibraryMusic)
     object Search  : Screen("search",  "Search",  Icons.Rounded.Search)
@@ -26,7 +29,10 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 private val navScreens = listOf(Screen.Library, Screen.Search, Screen.Settings)
 
 @Composable
-fun AuraNavigation(controllerManager: AuraMediaControllerManager) {
+fun AuraNavigation(
+    controllerManager: AuraMediaControllerManager,
+    songRepository: SongRepository
+) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
@@ -70,15 +76,24 @@ fun AuraNavigation(controllerManager: AuraMediaControllerManager) {
             modifier = Modifier.padding(padding)
         ) {
             composable(Screen.Library.route) {
-                LibraryScreen(controllerManager = controllerManager)
+                LibraryScreen(
+                    controllerManager = controllerManager,
+                    songRepository = songRepository
+                )
             }
             composable(Screen.Search.route) {
                 // Phase 5 — Search screen placeholder
-                LibraryScreen(controllerManager = controllerManager)
+                LibraryScreen(
+                    controllerManager = controllerManager,
+                    songRepository = songRepository
+                )
             }
             composable(Screen.Settings.route) {
                 // Phase 5 — Settings placeholder
-                LibraryScreen(controllerManager = controllerManager)
+                LibraryScreen(
+                    controllerManager = controllerManager,
+                    songRepository = songRepository
+                )
             }
         }
     }

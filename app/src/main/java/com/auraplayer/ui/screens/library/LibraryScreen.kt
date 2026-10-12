@@ -27,23 +27,28 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.auraplayer.ads.BannerAdView
 import com.auraplayer.domain.model.Song
 import com.auraplayer.service.AuraMediaControllerManager
 import com.auraplayer.ui.theme.*
-import androidx.hilt.navigation.compose.hiltViewModel as hiltVM
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.auraplayer.domain.repository.SongRepository
 
 @Composable
 fun LibraryScreen(
     controllerManager: AuraMediaControllerManager,
+    songRepository: SongRepository,
     modifier: Modifier = Modifier,
-    viewModel: LibraryViewModel = hiltViewModel()
+    viewModel: LibraryViewModel = viewModel(
+        factory = LibraryViewModel.provideFactory(songRepository)
+    )
 ) {
     val songs   by viewModel.songs.collectAsStateWithLifecycle()
     val query   by viewModel.query.collectAsStateWithLifecycle()

@@ -5,37 +5,28 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import com.auraplayer.data.local.db.SongDao
-import com.auraplayer.data.local.entity.toEntity
+import com.auraplayer.data.local.db.AuraDatabaseHelper
 import com.auraplayer.domain.model.Song
 import com.auraplayer.domain.repository.SongRepository
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class SongRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val dao: SongDao
+class SongRepositoryImpl(
+    private val context: Context,
+    private val dbHelper: AuraDatabaseHelper
 ) : SongRepository {
 
-    override fun getAllSongs(): Flow<List<Song>> =
-        dao.getAllSongs().map { it.map { e -> e.toDomain() } }
+    override fun getAllSongs(): Flow<List<Song>> = dbHelper.getAllSongs()
 
-    override fun search(query: String): Flow<List<Song>> =
-        dao.search(query).map { it.map { e -> e.toDomain() } }
+    override fun search(query: String): Flow<List<Song>> = dbHelper.searchSongs(query)
 
-    override fun getSongsByAlbum(album: String): Flow<List<Song>> =
-        dao.getSongsByAlbum(album).map { it.map { e -> e.toDomain() } }
+    override fun getSongsByAlbum(album: String): Flow<List<Song>> = dbHelper.getSongsByAlbum(album)
 
     override suspend fun syncWithMediaStore() = withContext(Dispatchers.IO) {
         val songs = scanMediaStore()
-        dao.upsertAll(songs.map { it.toEntity() })
-        dao.deleteStale(songs.map { it.id })
+        dbHelper.upsertAll(songs)
+        dbHelper.deleteStale(songs.map { it.id })
     }
 
     private fun scanMediaStore(): List<Song> {
