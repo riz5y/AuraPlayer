@@ -25,7 +25,13 @@ class AuraContainer(private val context: Context) {
         AuraMediaControllerManager(context)
     }
 
+    val billingManager: com.auraplayer.core.billing.BillingManager by lazy {
+        com.auraplayer.core.billing.BillingManager(context)
+    }
+
     val adManager: AdManager by lazy {
-        AdManager(context)
+        AdManager(context).apply {
+            isProUser = { billingManager.isProUser.value }
+        }
     }
 }

@@ -22,19 +22,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Brush
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.auraplayer.core.billing.BillingManager
 import com.auraplayer.domain.repository.SongRepository
 import com.auraplayer.ui.components.BounceButton
+import com.auraplayer.ui.screens.library.MusicImportSheet
+import com.auraplayer.ui.screens.pro.ProPaywallSheet
 import com.auraplayer.ui.theme.*
 import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
     songRepository: SongRepository,
+    billingManager: BillingManager,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+
+    val isPro by billingManager.isProUser.collectAsStateWithLifecycle()
+    var showProPaywall by remember { mutableStateOf(false) }
+    var showImportSheet by remember { mutableStateOf(false) }
 
     var hapticBassEnabled by remember { mutableStateOf(true) }
     var fluidShaderEnabled by remember { mutableStateOf(true) }
@@ -57,8 +67,79 @@ fun SettingsScreen(
             text = "Settings",
             style = MaterialTheme.typography.displayMedium,
             color = White,
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding(bottom = 20.dp)
         )
+
+        // ── Pro Banner Card ──────────────────────────────────────────
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isPro) SurfaceElevated else Surface
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .clickable {
+                    if (!isPro) showProPaywall = true
+                }
+                .padding(bottom = 24.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        if (isPro)
+                            Brush.linearGradient(listOf(Color(0xFF2E2405), Color(0xFF1B1B1F)))
+                        else
+                            Brush.linearGradient(listOf(Color(0xFF2A1C14), Color(0xFF141416)))
+                    )
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(Color(0xFFFFD700), Color(0xFFFFA500), Accent)
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Rounded.WorkspacePremium,
+                        contentDescription = null,
+                        tint = DeepBlack,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isPro) "Aura Pro Lifetime Active" else "Upgrade to Aura Pro",
+                        color = White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    )
+                    Text(
+                        text = if (isPro) "All features unlocked · 0 ads" else "One-time $2.99 · Remove ads & unlock sound features",
+                        color = WhiteMuted,
+                        fontSize = 12.sp
+                    )
+                }
+
+                if (!isPro) {
+                    Icon(
+                        Icons.AutoMirrored.Rounded.ArrowForwardIos,
+                        contentDescription = null,
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
 
         // ── 1. Audio & Fidelity Section ──────────────────────────────
         SettingsSectionHeader("AUDIO & FIDELITY")
@@ -172,6 +253,15 @@ fun SettingsScreen(
         SettingsSectionHeader("LIBRARY & STORAGE")
         SettingsCard {
             SettingsActionRow(
+                icon = Icons.Rounded.CloudUpload,
+                title = "Import Music Files (SAF)",
+                subtitle = "Select audio from device storage or cloud drives",
+                onClick = { showImportSheet = true }
+            )
+
+            HorizontalDivider(color = Outline, thickness = 0.5.dp)
+
+            SettingsActionRow(
                 icon = Icons.Rounded.Sync,
                 title = "Rescan Media Library",
                 subtitle = "Scan device storage for new songs and albums",
@@ -205,6 +295,20 @@ fun SettingsScreen(
             Text("AuraPlayer v1.0.0 Pro", color = WhiteMuted, fontSize = 13.sp)
             Text("Apple Music Fidelity · Built with Jetpack Compose", color = WhiteDim, fontSize = 11.sp)
         }
+    }
+
+    if (showProPaywall) {
+        ProPaywallSheet(
+            billingManager = billingManager,
+            onDismiss = { showProPaywall = false }
+        )
+    }
+
+    if (showImportSheet) {
+        MusicImportSheet(
+            songRepository = songRepository,
+            onDismiss = { showImportSheet = false }
+        )
     }
 }
 

@@ -109,7 +109,7 @@ class AuraDatabaseHelper(context: Context) : SQLiteOpenHelper(context, "aura_mus
         val db = writableDatabase
         val placeholders = activeIds.joinToString(",") { "?" }
         val args = activeIds.map { it.toString() }.toTypedArray()
-        db.delete("songs", "id NOT IN ($placeholders)", args)
+        db.delete("songs", "id NOT IN ($placeholders) AND uri LIKE 'content://media/external/audio/%'", args)
         changeNotifier.tryEmit(Unit)
     }
 

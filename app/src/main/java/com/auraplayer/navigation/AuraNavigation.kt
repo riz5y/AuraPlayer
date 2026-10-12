@@ -18,6 +18,7 @@ import com.auraplayer.ui.screens.library.LibraryScreen
 import com.auraplayer.ui.theme.*
 
 import androidx.compose.ui.unit.dp
+import com.auraplayer.core.billing.BillingManager
 import com.auraplayer.domain.repository.SongRepository
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
@@ -31,7 +32,8 @@ private val navScreens = listOf(Screen.Library, Screen.Search, Screen.Settings)
 @Composable
 fun AuraNavigation(
     controllerManager: AuraMediaControllerManager,
-    songRepository: SongRepository
+    songRepository: SongRepository,
+    billingManager: BillingManager
 ) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
@@ -78,19 +80,22 @@ fun AuraNavigation(
             composable(Screen.Library.route) {
                 LibraryScreen(
                     controllerManager = controllerManager,
-                    songRepository = songRepository
+                    songRepository = songRepository,
+                    billingManager = billingManager
                 )
             }
             composable(Screen.Search.route) {
                 // Phase 5 — Search screen placeholder
                 LibraryScreen(
                     controllerManager = controllerManager,
-                    songRepository = songRepository
+                    songRepository = songRepository,
+                    billingManager = billingManager
                 )
             }
             composable(Screen.Settings.route) {
                 com.auraplayer.ui.screens.settings.SettingsScreen(
-                    songRepository = songRepository
+                    songRepository = songRepository,
+                    billingManager = billingManager
                 )
             }
         }

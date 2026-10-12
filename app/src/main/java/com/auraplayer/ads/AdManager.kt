@@ -25,8 +25,10 @@ class AdManager(
     private var lastInterstitialShownAt = 0L
     private var skipCount = 0
     private var splashAdShownThisSession = false
+    var isProUser: () -> Boolean = { false }
 
     fun initialize() {
+        if (isProUser()) return
         MobileAds.initialize(context) {}
         preloadSplashAd()
         preloadSessionAd()
@@ -35,6 +37,7 @@ class AdManager(
     // ── Splash Interstitial ───────────────────────────────────────────────────
 
     private fun preloadSplashAd() {
+        if (isProUser()) return
         val request = AdRequest.Builder().build()
         InterstitialAd.load(context, SPLASH_INTERSTITIAL_ID, request,
             object : InterstitialAdLoadCallback() {
@@ -48,7 +51,7 @@ class AdManager(
 
     /** Call this after SplashScreen finishes — shows once per cold start. */
     fun showSplashAdIfReady(activity: Activity, onDone: () -> Unit) {
-        if (splashAdShownThisSession || splashAd == null) {
+        if (isProUser() || splashAdShownThisSession || splashAd == null) {
             onDone(); return
         }
         splashAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
@@ -66,6 +69,7 @@ class AdManager(
     // ── Session Interstitial ──────────────────────────────────────────────────
 
     private fun preloadSessionAd() {
+        if (isProUser()) return
         val request = AdRequest.Builder().build()
         InterstitialAd.load(context, SESSION_INTERSTITIAL_ID, request,
             object : InterstitialAdLoadCallback() {
@@ -82,6 +86,7 @@ class AdManager(
      *  - cooldown passed
      */
     fun onSongSkipped(activity: Activity, isPlaying: Boolean) {
+        if (isProUser()) return
         skipCount++
         val cooldownPassed =
             System.currentTimeMillis() - lastInterstitialShownAt > MIN_INTERSTITIAL_INTERVAL_MS

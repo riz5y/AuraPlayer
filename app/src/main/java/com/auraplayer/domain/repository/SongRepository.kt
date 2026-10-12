@@ -8,4 +8,5 @@ interface SongRepository {
     fun search(query: String): Flow<List<Song>>
     fun getSongsByAlbum(album: String): Flow<List<Song>>
     suspend fun syncWithMediaStore()
+    suspend fun importSongsFromUris(uris: List<android.net.Uri>): Int
 }

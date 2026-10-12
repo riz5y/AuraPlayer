@@ -84,18 +84,19 @@ fun MiniPlayerBar(
                 alpha = contentAlpha
             }
     ) {
-        // Water liquid background
-        com.auraplayer.ui.components.FluidMeshBackground(
-            colors = dynamicColors,
-            isIdle = isIdle,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Semi-transparent glass overlay for readability
+        // Deep solid card with album art horizontal gradient
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.25f))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(
+                            dynamicColors.dominant.copy(alpha = 0.95f),
+                            dynamicColors.vibrant.copy(alpha = 0.85f),
+                            SurfaceVariant
+                        )
+                    )
+                )
         )
         // ── Main content row ─────────────────────────────────────────
         Row(

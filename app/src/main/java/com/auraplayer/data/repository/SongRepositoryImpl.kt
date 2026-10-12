@@ -12,6 +12,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
+import android.content.Intent
+import android.media.MediaMetadataRetriever
+import android.provider.OpenableColumns
+
 class SongRepositoryImpl(
     private val context: Context,
     private val dbHelper: AuraDatabaseHelper
@@ -27,6 +31,69 @@ class SongRepositoryImpl(
         val songs = scanMediaStore()
         dbHelper.upsertAll(songs)
         dbHelper.deleteStale(songs.map { it.id })
+    }
+
+    override suspend fun importSongsFromUris(uris: List<Uri>): Int = withContext(Dispatchers.IO) {
+        val importedList = mutableListOf<Song>()
+        val mmr = MediaMetadataRetriever()
+        for (uri in uris) {
+            try {
+                try {
+                    context.contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: Exception) {}
+
+                var displayName = "Imported Track"
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIdx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIdx != -1 && cursor.moveToFirst()) {
+                        cursor.getString(nameIdx)?.let { displayName = it }
+                    }
+                }
+
+                mmr.setDataSource(context, uri)
+                val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+                    ?: displayName.substringBeforeLast(".")
+                val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+                    ?: "Unknown Artist"
+                val album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
+                    ?: "Imported"
+                val durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                val duration = durationStr?.toLongOrNull() ?: 0L
+                val trackNumber = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER)?.toIntOrNull() ?: 0
+                val year = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR)?.toIntOrNull() ?: 0
+
+                val generatedId = (uri.toString().hashCode().toLong() and 0x7FFFFFFFL) + 1_000_000_000L
+
+                importedList.add(
+                    Song(
+                        id = generatedId,
+                        title = title,
+                        artist = artist,
+                        album = album,
+                        albumId = (album.hashCode().toLong() and 0x7FFFFFFFL),
+                        duration = duration,
+                        uri = uri,
+                        artworkUri = null,
+                        trackNumber = trackNumber,
+                        year = year,
+                        dateAdded = System.currentTimeMillis() / 1000
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        try {
+            mmr.release()
+        } catch (_: Exception) {}
+
+        if (importedList.isNotEmpty()) {
+            dbHelper.upsertAll(importedList)
+        }
+        importedList.size
     }
 
     private fun scanMediaStore(): List<Song> {

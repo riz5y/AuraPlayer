@@ -62,10 +62,10 @@ fun NowPlayingScreen(
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        // ── AGSL Fluid Shader Mesh Background ────────────────────────
-        FluidMeshBackground(
+        // ── Abstract Vector Waveform Illustration Background ─────────
+        com.auraplayer.ui.components.IllustrationVisualizer(
             colors = dynamicColors,
-            isIdle = playerState.currentMediaItem == null
+            isPlaying = playerState.isPlaying
         )
 
         Column(

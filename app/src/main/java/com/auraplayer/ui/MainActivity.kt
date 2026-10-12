@@ -44,7 +44,8 @@ class MainActivity : ComponentActivity() {
                         ) {
                             AuraNavigation(
                                 controllerManager = controllerManager,
-                                songRepository = container.songRepository
+                                songRepository = container.songRepository,
+                                billingManager = container.billingManager
                             )
                         }
                     }

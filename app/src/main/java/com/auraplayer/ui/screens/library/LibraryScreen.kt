@@ -39,12 +39,16 @@ import com.auraplayer.domain.model.Song
 import com.auraplayer.service.AuraMediaControllerManager
 import com.auraplayer.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.text.font.FontWeight
+import com.auraplayer.core.billing.BillingManager
+import com.auraplayer.ui.screens.pro.ProPaywallSheet
 import com.auraplayer.domain.repository.SongRepository
 
 @Composable
 fun LibraryScreen(
     controllerManager: AuraMediaControllerManager,
     songRepository: SongRepository,
+    billingManager: BillingManager,
     modifier: Modifier = Modifier,
     viewModel: LibraryViewModel = viewModel(
         factory = LibraryViewModel.provideFactory(songRepository)
@@ -53,7 +57,10 @@ fun LibraryScreen(
     val songs   by viewModel.songs.collectAsStateWithLifecycle()
     val query   by viewModel.query.collectAsStateWithLifecycle()
     val filter  by viewModel.filter.collectAsStateWithLifecycle()
+    val isPro   by billingManager.isProUser.collectAsStateWithLifecycle()
     var showSearch by remember { mutableStateOf(false) }
+    var showProPaywall by remember { mutableStateOf(false) }
+    var showImportSheet by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     Column(
@@ -107,6 +114,57 @@ fun LibraryScreen(
             }
 
             Spacer(Modifier.width(12.dp))
+
+            if (!showSearch) {
+                // Import Music Button
+                BounceIconButton(
+                    icon = Icons.Rounded.CloudUpload,
+                    onClick = { showImportSheet = true }
+                )
+
+                Spacer(Modifier.width(8.dp))
+
+                // Pro Badge
+                com.auraplayer.ui.components.BounceButton(
+                    onClick = { showProPaywall = true }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .height(38.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (isPro)
+                                    androidx.compose.ui.graphics.Brush.linearGradient(
+                                        listOf(Color(0xFFFFD700), Color(0xFFFFA500))
+                                    )
+                                else
+                                    androidx.compose.ui.graphics.SolidColor(SurfaceElevated)
+                            )
+                            .padding(horizontal = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.WorkspacePremium,
+                                contentDescription = "Pro",
+                                tint = if (isPro) DeepBlack else Color(0xFFFFD700),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "PRO",
+                                color = if (isPro) DeepBlack else White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.width(8.dp))
+            }
 
             BounceIconButton(
                 icon = if (showSearch) Icons.Rounded.Close else Icons.Rounded.Search,
@@ -185,8 +243,24 @@ fun LibraryScreen(
             )
         }
 
-        // ── AdMob Banner (above mini-player) ─────────────────────────
-        BannerAdView()
+        if (showProPaywall) {
+            ProPaywallSheet(
+                billingManager = billingManager,
+                onDismiss = { showProPaywall = false }
+            )
+        }
+
+        if (showImportSheet) {
+            MusicImportSheet(
+                songRepository = songRepository,
+                onDismiss = { showImportSheet = false }
+            )
+        }
+
+        // ── AdMob Banner (above mini-player, suppressed for Pro) ─────
+        if (!isPro) {
+            BannerAdView()
+        }
     }
 }
 
