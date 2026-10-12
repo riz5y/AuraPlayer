@@ -54,7 +54,7 @@ fun AuraSeekBar(
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(36.dp)
+                .height(24.dp)
                 .pointerInput(duration) {
                     detectHorizontalDragGestures(
                         onDragStart = { offset ->

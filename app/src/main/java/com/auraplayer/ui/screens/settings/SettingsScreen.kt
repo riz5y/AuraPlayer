@@ -27,7 +27,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.auraplayer.core.billing.BillingManager
 import com.auraplayer.domain.repository.SongRepository
 import com.auraplayer.ui.components.BounceButton
+import com.auraplayer.core.transfer.WifiTransferServer
 import com.auraplayer.ui.screens.library.MusicImportSheet
+import com.auraplayer.ui.screens.library.WifiCloudTransferSheet
 import com.auraplayer.ui.screens.pro.ProPaywallSheet
 import com.auraplayer.ui.theme.*
 import kotlinx.coroutines.launch
@@ -45,6 +47,7 @@ fun SettingsScreen(
     val isPro by billingManager.isProUser.collectAsStateWithLifecycle()
     var showProPaywall by remember { mutableStateOf(false) }
     var showImportSheet by remember { mutableStateOf(false) }
+    var showWifiCloudSheet by remember { mutableStateOf(false) }
 
     var hapticBassEnabled by remember { mutableStateOf(true) }
     var fluidShaderEnabled by remember { mutableStateOf(true) }
@@ -52,6 +55,11 @@ fun SettingsScreen(
     var selectedPreset by remember { mutableStateOf("Club & Bass") }
     var sleepTimerMin by remember { mutableIntStateOf(0) }
     var autoPauseNoisy by remember { mutableStateOf(true) }
+    var audioDecoderQuality by remember { mutableStateOf("32-bit Float Hi-Fi Engine") }
+    var volumeNormalization by remember { mutableStateOf(true) }
+    var visualizerSpeed by remember { mutableStateOf("Dynamic Rhythm") }
+    var keepScreenAwake by remember { mutableStateOf(false) }
+    var bluetoothAutoResume by remember { mutableStateOf(true) }
 
     Column(
         modifier = modifier
@@ -148,8 +156,28 @@ fun SettingsScreen(
                 icon = Icons.Rounded.GraphicEq,
                 title = "Equalizer Preset",
                 currentValue = selectedPreset,
-                options = listOf("Club & Bass", "Vocal Clarity", "Electronic", "Studio Flat"),
+                options = listOf("Club & Bass", "Vocal Clarity", "Electronic", "Studio Flat", "Bass Booster", "Acoustic Warmth"),
                 onSelect = { selectedPreset = it }
+            )
+
+            HorizontalDivider(color = Outline, thickness = 0.5.dp)
+
+            SettingsDropdownRow(
+                icon = Icons.Rounded.Speed,
+                title = "Audio Engine Decoder",
+                currentValue = audioDecoderQuality,
+                options = listOf("32-bit Float Hi-Fi Engine", "Bit-Perfect Lossless", "Standard 16-bit"),
+                onSelect = { audioDecoderQuality = it }
+            )
+
+            HorizontalDivider(color = Outline, thickness = 0.5.dp)
+
+            SettingsToggleRow(
+                icon = Icons.Rounded.VolumeUp,
+                title = "ReplayGain Peak Limiter",
+                subtitle = "Normalizes tracks and prevents harsh volume jumps",
+                checked = volumeNormalization,
+                onCheckedChange = { volumeNormalization = it }
             )
 
             HorizontalDivider(color = Outline, thickness = 0.5.dp)
@@ -205,26 +233,36 @@ fun SettingsScreen(
         SettingsCard {
             SettingsToggleRow(
                 icon = Icons.Rounded.Waves,
-                title = "AGSL Liquid Water Shaders",
-                subtitle = "Fluid caustic ripples responding to album colors",
+                title = "AGSL Vector Audio Shaders",
+                subtitle = "Fluid dynamic curves pulsing to audio while playing",
                 checked = fluidShaderEnabled,
                 onCheckedChange = { fluidShaderEnabled = it }
             )
 
             HorizontalDivider(color = Outline, thickness = 0.5.dp)
 
+            SettingsDropdownRow(
+                icon = Icons.Rounded.Animation,
+                title = "Visualizer Waveform Style",
+                currentValue = visualizerSpeed,
+                options = listOf("Harmonic Sine Waves", "Dynamic Rhythm", "Gentle Flow"),
+                onSelect = { visualizerSpeed = it }
+            )
+
+            HorizontalDivider(color = Outline, thickness = 0.5.dp)
+
             SettingsToggleRow(
-                icon = Icons.Rounded.Headphones,
-                title = "Auto-Pause on Unplug",
-                subtitle = "Pause playback when headphones are disconnected",
-                checked = autoPauseNoisy,
-                onCheckedChange = { autoPauseNoisy = it }
+                icon = Icons.Rounded.WbSunny,
+                title = "Keep Screen Awake",
+                subtitle = "Prevent screen from dimming when player is expanded",
+                checked = keepScreenAwake,
+                onCheckedChange = { keepScreenAwake = it }
             )
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // ── 3. Playback & Sleep Timer ────────────────────────────────
+        // ── 3. Playback & Automation ─────────────────────────────────
         SettingsSectionHeader("PLAYBACK AUTOMATION")
         SettingsCard {
             SettingsDropdownRow(
@@ -245,13 +283,42 @@ fun SettingsScreen(
                     }
                 }
             )
+
+            HorizontalDivider(color = Outline, thickness = 0.5.dp)
+
+            SettingsToggleRow(
+                icon = Icons.Rounded.Headphones,
+                title = "Auto-Pause on Unplug",
+                subtitle = "Pause playback when headphones are disconnected",
+                checked = autoPauseNoisy,
+                onCheckedChange = { autoPauseNoisy = it }
+            )
+
+            HorizontalDivider(color = Outline, thickness = 0.5.dp)
+
+            SettingsToggleRow(
+                icon = Icons.Rounded.BluetoothAudio,
+                title = "Bluetooth Auto-Resume",
+                subtitle = "Resume playback when your wireless headphones reconnect",
+                checked = bluetoothAutoResume,
+                onCheckedChange = { bluetoothAutoResume = it }
+            )
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // ── 4. Library & Storage ─────────────────────────────────────
-        SettingsSectionHeader("LIBRARY & STORAGE")
+        // ── 4. Library & Wireless Transfer ───────────────────────────
+        SettingsSectionHeader("LIBRARY & WIRELESS TRANSFER")
         SettingsCard {
+            SettingsActionRow(
+                icon = Icons.Rounded.Devices,
+                title = "PC & Cloud Transfer Hub",
+                subtitle = "Wireless Wi-Fi drag & drop from computer or Google Drive",
+                onClick = { showWifiCloudSheet = true }
+            )
+
+            HorizontalDivider(color = Outline, thickness = 0.5.dp)
+
             SettingsActionRow(
                 icon = Icons.Rounded.CloudUpload,
                 title = "Import Music Files (SAF)",
@@ -292,8 +359,9 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("AuraPlayer v1.0.0 Pro", color = WhiteMuted, fontSize = 13.sp)
-            Text("Apple Music Fidelity · Built with Jetpack Compose", color = WhiteDim, fontSize = 11.sp)
+            val deviceModel = "${android.os.Build.MANUFACTURER.replaceFirstChar { it.uppercase() }} ${android.os.Build.MODEL}"
+            Text("AuraPlayer v1.0.0 Pro · Connected to $deviceModel", color = WhiteMuted, fontSize = 13.sp)
+            Text("Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT}) · Studio Pure Architecture", color = WhiteDim, fontSize = 11.sp)
         }
     }
 
@@ -308,6 +376,14 @@ fun SettingsScreen(
         MusicImportSheet(
             songRepository = songRepository,
             onDismiss = { showImportSheet = false }
+        )
+    }
+
+    if (showWifiCloudSheet) {
+        WifiCloudTransferSheet(
+            wifiServer = remember { WifiTransferServer(context) },
+            songRepository = songRepository,
+            onDismiss = { showWifiCloudSheet = false }
         )
     }
 }

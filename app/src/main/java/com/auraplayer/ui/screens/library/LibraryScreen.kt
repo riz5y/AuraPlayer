@@ -215,7 +215,7 @@ fun LibraryScreen(
         } else {
             // Song list
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 160.dp),
+                contentPadding = PaddingValues(bottom = 90.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 items(songs, key = { it.id }) { song ->

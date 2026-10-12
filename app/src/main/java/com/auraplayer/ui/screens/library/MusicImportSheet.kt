@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.auraplayer.core.transfer.WifiTransferServer
 import com.auraplayer.domain.repository.SongRepository
 import com.auraplayer.ui.components.BounceButton
 import com.auraplayer.ui.theme.*
@@ -32,12 +33,16 @@ import kotlinx.coroutines.launch
 @Composable
 fun MusicImportSheet(
     songRepository: SongRepository,
+    wifiServer: WifiTransferServer? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val effectiveWifiServer = remember(wifiServer) {
+        wifiServer ?: WifiTransferServer(context)
+    }
     val scope = rememberCoroutineScope()
     var isImporting by remember { mutableStateOf(false) }
-    var showWifiGuide by remember { mutableStateOf(false) }
+    var showWifiTransferSheet by remember { mutableStateOf(false) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
@@ -144,39 +149,11 @@ fun MusicImportSheet(
                 ImportOptionCard(
                     icon = Icons.Rounded.Devices,
                     title = "PC / Wi-Fi & Cloud Transfer",
-                    subtitle = "How to drag & drop audio from your computer or Google Drive",
+                    subtitle = "Open live Web Uploader or Google Drive Cloud Picker",
                     onClick = {
-                        showWifiGuide = !showWifiGuide
+                        showWifiTransferSheet = true
                     }
                 )
-
-                if (showWifiGuide) {
-                    Spacer(Modifier.height(12.dp))
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = SurfaceVariant),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                "Quick Wi-Fi & PC Setup:",
-                                color = White,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                "1. Connect your phone via USB or local Wi-Fi share.\n" +
-                                "2. Drag music files into the phone's 'Music' or 'Download' folder.\n" +
-                                "3. Or download tracks from your private Google Drive.\n" +
-                                "4. Aura will automatically detect and play them in studio quality!",
-                                color = WhiteMuted,
-                                fontSize = 12.sp,
-                                lineHeight = 18.sp
-                            )
-                        }
-                    }
-                }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -201,6 +178,14 @@ fun MusicImportSheet(
                 }
             }
         }
+    }
+
+    if (showWifiTransferSheet) {
+        WifiCloudTransferSheet(
+            wifiServer = effectiveWifiServer,
+            songRepository = songRepository,
+            onDismiss = { showWifiTransferSheet = false }
+        )
     }
 }
 

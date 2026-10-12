@@ -108,8 +108,8 @@ fun ExpandablePlayerSheet(
                 }
             }
         }
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
+    ) { _ ->
+        Box(modifier = Modifier.fillMaxSize()) {
             content()
         }
     }

@@ -34,4 +34,8 @@ class AuraContainer(private val context: Context) {
             isProUser = { billingManager.isProUser.value }
         }
     }
+
+    val wifiTransferServer: com.auraplayer.core.transfer.WifiTransferServer by lazy {
+        com.auraplayer.core.transfer.WifiTransferServer(context)
+    }
 }

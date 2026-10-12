@@ -25,3 +25,4 @@ gradle/wrapper/gradle-wrapper.jar
 
 # OS
 Thumbs.db
+*.wav

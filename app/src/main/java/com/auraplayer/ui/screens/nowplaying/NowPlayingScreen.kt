@@ -72,27 +72,29 @@ fun NowPlayingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .systemBarsPadding()
-                .padding(horizontal = 28.dp),
+                .padding(horizontal = 22.dp)
+                .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             // Drag handle pill
             Box(
                 Modifier
-                    .width(40.dp)
+                    .width(36.dp)
                     .height(4.dp)
                     .clip(CircleShape)
                     .background(WhiteSubtle)
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
 
             // ── Center Stage: Album Art OR Synced Lyrics ─────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f, fill = false)
+                    .padding(vertical = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
                 AnimatedContent(
@@ -113,14 +115,15 @@ fun NowPlayingScreen(
                             artworkUri = playerState.currentMediaItem?.mediaMetadata?.artworkUri,
                             isPlaying = playerState.isPlaying,
                             modifier = Modifier
-                                .fillMaxWidth(0.9f)
+                                .sizeIn(maxWidth = 300.dp, maxHeight = 300.dp)
+                                .fillMaxWidth(0.85f)
                                 .aspectRatio(1f)
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
 
             // ── Song Info + Action Buttons ───────────────────────────
             Row(
@@ -131,30 +134,30 @@ fun NowPlayingScreen(
                     Text(
                         text = playerState.currentMediaItem?.mediaMetadata?.title?.toString()
                             ?: "Not Playing",
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.headlineMedium,
                         color = White,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = playerState.currentMediaItem?.mediaMetadata?.artist?.toString()
                             ?: "—",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         color = WhiteMuted,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Lyrics Toggle Button (Apple Music style)
                     BounceButton(onClick = { showLyrics = !showLyrics }) {
                         Icon(
                             imageVector = Icons.Rounded.FormatQuote,
                             contentDescription = "Lyrics",
                             tint = if (showLyrics) dynamicColors.onContent else WhiteDim,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
 
@@ -164,13 +167,13 @@ fun NowPlayingScreen(
                             imageVector = Icons.Rounded.FavoriteBorder,
                             contentDescription = "Love",
                             tint = WhiteMuted,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(10.dp))
 
             // ── Seek bar ─────────────────────────────────────────────
             AuraSeekBar(
@@ -181,7 +184,7 @@ fun NowPlayingScreen(
                 onSeek = { viewModel.seekTo(it) }
             )
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(12.dp))
 
             // ── Transport controls ────────────────────────────────────
             TransportControls(
@@ -196,24 +199,24 @@ fun NowPlayingScreen(
                 onShuffle = { viewModel.toggleShuffle() }
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(10.dp))
 
             // ── Volume row (subtle) ───────────────────────────────────
             Row(
                 Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
                     Icons.AutoMirrored.Rounded.VolumeDown,
                     null,
                     tint = WhiteDim,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
                 Slider(
                     value = 0.7f,
                     onValueChange = {},
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(24.dp),
                     colors = SliderDefaults.colors(
                         thumbColor = White,
                         activeTrackColor = White,
@@ -224,10 +227,9 @@ fun NowPlayingScreen(
                     Icons.AutoMirrored.Rounded.VolumeUp,
                     null,
                     tint = WhiteDim,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
-            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -254,27 +256,27 @@ private fun TransportControls(
                 Icons.Rounded.Shuffle,
                 contentDescription = "Shuffle",
                 tint = if (shuffleEnabled) onContent else onContent.copy(0.4f),
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(20.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             BounceButton(onClick = onPrevious) {
                 Icon(
                     Icons.Rounded.SkipPrevious,
                     "Previous",
                     tint = onContent,
-                    modifier = Modifier.size(46.dp)
+                    modifier = Modifier.size(38.dp)
                 )
             }
 
             BounceButton(onClick = onPlayPause) {
                 Box(
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(62.dp)
                         .clip(CircleShape)
                         .background(onContent),
                     contentAlignment = Alignment.Center
@@ -283,7 +285,7 @@ private fun TransportControls(
                     val iconSize by transition.animateDp(
                         transitionSpec = { spring(Spring.DampingRatioMediumBouncy) },
                         label = "icon_size"
-                    ) { if (it) 30.dp else 34.dp }
+                    ) { if (it) 26.dp else 30.dp }
 
                     Icon(
                         imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
@@ -299,7 +301,7 @@ private fun TransportControls(
                     Icons.Rounded.SkipNext,
                     "Next",
                     tint = onContent,
-                    modifier = Modifier.size(46.dp)
+                    modifier = Modifier.size(38.dp)
                 )
             }
         }
@@ -311,7 +313,7 @@ private fun TransportControls(
                 contentDescription = "Repeat",
                 tint = if (repeatMode != Player.REPEAT_MODE_OFF) onContent
                        else onContent.copy(0.4f),
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
     }
