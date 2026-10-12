@@ -61,16 +61,18 @@ class AdManager(
      * Waits for the splash ad to load if not ready yet (up to timeoutMs),
      * and shows it automatically before entering the app.
      */
-    fun loadAndShowSplashAd(activity: Activity, timeoutMs: Long = 3500L, onDone: () -> Unit) {
-        if (isProUser() || splashAdShownThisSession) {
+    fun loadAndShowSplashAd(activity: Activity, timeoutMs: Long = 5000L, onDone: () -> Unit) {
+        if (isProUser()) {
             onDone(); return
         }
 
+        Log.i("AdManager", "loadAndShowSplashAd called. Existing ad available: ${splashAd != null}")
         var completed = false
         val mainHandler = Handler(Looper.getMainLooper())
 
         val timeoutRunnable = Runnable {
             if (!completed) {
+                Log.w("AdManager", "Splash ad timed out after ${timeoutMs}ms, continuing to app")
                 completed = true
                 onDone()
             }
@@ -78,9 +80,10 @@ class AdManager(
         mainHandler.postDelayed(timeoutRunnable, timeoutMs)
 
         fun presentAd(ad: InterstitialAd) {
+            Log.i("AdManager", "Presenting splash interstitial ad on activity")
             ad.fullScreenContentCallback = object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
-                    splashAdShownThisSession = true
+                    Log.i("AdManager", "Splash ad dismissed by user")
                     lastInterstitialShownAt = System.currentTimeMillis()
                     splashAd = null
                     preloadSplashAd()
@@ -91,6 +94,7 @@ class AdManager(
                     }
                 }
                 override fun onAdFailedToShowFullScreenContent(e: AdError) {
+                    Log.w("AdManager", "Splash ad failed to show: ${e.message}")
                     if (!completed) {
                         completed = true
                         mainHandler.removeCallbacks(timeoutRunnable)
@@ -106,15 +110,17 @@ class AdManager(
             presentAd(existingAd)
         } else {
             val request = AdRequest.Builder().build()
-            InterstitialAd.load(context, SPLASH_INTERSTITIAL_ID, request,
+            InterstitialAd.load(activity, SPLASH_INTERSTITIAL_ID, request,
                 object : InterstitialAdLoadCallback() {
                     override fun onAdLoaded(ad: InterstitialAd) {
+                        Log.i("AdManager", "Splash interstitial ad loaded from network successfully")
                         splashAd = ad
                         if (!completed) {
                             presentAd(ad)
                         }
                     }
                     override fun onAdFailedToLoad(error: LoadAdError) {
+                        Log.w("AdManager", "Splash ad network load failed: ${error.message} (code ${error.code})")
                         if (!completed) {
                             completed = true
                             mainHandler.removeCallbacks(timeoutRunnable)

@@ -28,9 +28,13 @@ import com.auraplayer.ui.components.FluidMeshBackground
 import com.auraplayer.ui.components.SpringAlbumArt
 import com.auraplayer.ui.theme.*
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
 @Composable
 fun NowPlayingScreen(
     viewModel: NowPlayingViewModel,
+    onCollapse: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
@@ -72,22 +76,59 @@ fun NowPlayingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .systemBarsPadding()
-                .padding(horizontal = 22.dp)
+                .padding(horizontal = 20.dp)
                 .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // ── Spotify-Style Top Navigation Bar ──────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onCollapse) {
+                    Icon(
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = "Collapse",
+                        tint = White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "PLAYING FROM YOUR LIBRARY",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = WhiteDim,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = playerState.currentMediaItem?.mediaMetadata?.albumTitle?.toString()
+                            ?: "Aura Player",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = White,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                IconButton(onClick = { /* options */ }) {
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = "Options",
+                        tint = White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
             Spacer(Modifier.height(8.dp))
-
-            // Drag handle pill
-            Box(
-                Modifier
-                    .width(36.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(WhiteSubtle)
-            )
-
-            Spacer(Modifier.height(12.dp))
 
             // ── Center Stage: Album Art OR Synced Lyrics ─────────────
             Box(

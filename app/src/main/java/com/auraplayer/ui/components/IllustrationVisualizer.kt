@@ -56,12 +56,15 @@ fun IllustrationVisualizer(
             val w = size.width
             val h = size.height
 
-            // Ambient background glow
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(primaryColor.copy(alpha = 0.28f), Color.Transparent),
-                    center = Offset(w * 0.5f, h * 0.45f),
-                    radius = w * 0.7f
+            // Ambient background smooth dynamic gradient (fills full screen seamlessly)
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        primaryColor.copy(alpha = 0.40f),
+                        secondaryColor.copy(alpha = 0.25f),
+                        DeepBlack,
+                        DeepBlack
+                    )
                 )
             )
 

@@ -266,7 +266,7 @@ fun LibraryScreen(
         } else {
             // Song list
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 90.dp),
+                contentPadding = PaddingValues(bottom = 16.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 items(songs, key = { it.id }) { song ->
@@ -315,22 +315,6 @@ fun LibraryScreen(
                 onDismiss = { showEqualizerSheet = false }
             )
         }
-
-        // ── AdMob Banner (Framed clean Spotify-style container) ───────
-        if (!isPro) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Surface)
-                    .border(0.5.dp, Outline, RoundedCornerShape(14.dp))
-                    .padding(vertical = 4.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                BannerAdView()
-            }
-        }
     }
 }
 
@@ -344,19 +328,37 @@ private fun SongRow(song: Song, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Album art
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(song.artworkUri)
-                .crossfade(true)
-                .build(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+        // Album art with fallback
+        Box(
             modifier = Modifier
                 .size(52.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(SurfaceElevated)
-        )
+                .background(
+                    androidx.compose.ui.graphics.Brush.linearGradient(
+                        listOf(Color(0xFF2C2448), Color(0xFF6C5CE7))
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (song.artworkUri != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(song.artworkUri)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Icon(
+                    Icons.Rounded.MusicNote,
+                    contentDescription = null,
+                    tint = White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
 
         // Info
         Column(modifier = Modifier.weight(1f)) {

@@ -8,7 +8,6 @@ import androidx.compose.runtime.*
 import com.auraplayer.AuraApplication
 import com.auraplayer.navigation.AuraNavigation
 import com.auraplayer.ui.components.AudioPermissionGate
-import com.auraplayer.ui.screens.player.ExpandablePlayerSheet
 import com.auraplayer.ui.screens.splash.SplashScreen
 import com.auraplayer.ui.theme.AuraTheme
 
@@ -39,17 +38,13 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     AudioPermissionGate {
-                        ExpandablePlayerSheet(
-                            controllerManager = controllerManager
-                        ) {
-                            AuraNavigation(
-                                controllerManager = controllerManager,
-                                songRepository = container.songRepository,
-                                billingManager = container.billingManager,
-                                adManager = container.adManager,
-                                equalizerManager = container.equalizerManager
-                            )
-                        }
+                        AuraNavigation(
+                            controllerManager = controllerManager,
+                            songRepository = container.songRepository,
+                            billingManager = container.billingManager,
+                            adManager = container.adManager,
+                            equalizerManager = container.equalizerManager
+                        )
                     }
                 }
             }

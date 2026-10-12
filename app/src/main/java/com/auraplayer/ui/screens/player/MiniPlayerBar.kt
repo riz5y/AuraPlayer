@@ -37,34 +37,24 @@ import com.auraplayer.ui.screens.nowplaying.PlayerState
 import com.auraplayer.ui.screens.nowplaying.DynamicColors
 import com.auraplayer.ui.theme.*
 
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.rounded.MusicNote
+
 /**
  * Floating mini-player bar.
- *
- * Design decisions (user confirmed):
- *  - Fully opaque with album-art dynamic gradient
- *  - 28dp rounded corners
- *  - Thin glowing progress bar at bottom edge
- *  - Corner radius lerps from 28dp → 20dp as sheet expands
+ * Clean, floating Spotify-grade card positioned directly above the navigation bar.
  */
 @Composable
 fun MiniPlayerBar(
     playerState: PlayerState,
     dynamicColors: DynamicColors,
-    /** 0f = fully collapsed (mini), 1f = fully expanded (full screen) */
-    sheetProgress: Float,
     modifier: Modifier = Modifier,
+    sheetProgress: Float = 0f,
     onExpand: () -> Unit = {},
     onPlayPause: () -> Unit,
     onSkipNext: () -> Unit,
 ) {
-    // Corner radius: 28dp collapsed → 20dp expanded
-    val cornerRadius by animateDpAsState(
-        targetValue = androidx.compose.ui.unit.lerp(28.dp, 20.dp, sheetProgress),
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "corner_radius"
-    )
-
-    // Fade out mini-player content as sheet expands
+    // Fade out mini-player content if expanding
     val contentAlpha = (1f - sheetProgress * 3.5f).coerceIn(0f, 1f)
 
     // Progress fraction
@@ -77,8 +67,9 @@ fun MiniPlayerBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius))
+            .height(64.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .border(0.5.dp, WhiteSubtle, RoundedCornerShape(14.dp))
             .clickable(enabled = contentAlpha > 0.05f, onClick = onExpand)
             .graphicsLayer {
                 alpha = contentAlpha
@@ -102,22 +93,42 @@ fun MiniPlayerBar(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Album art
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(playerState.currentMediaItem?.mediaMetadata?.artworkUri)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            // Album art with fallback
+            val artUri = playerState.currentMediaItem?.mediaMetadata?.artworkUri
+            Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(10.dp))
-            )
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color(0xFF2C2448), Color(0xFF6C5CE7))
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (artUri != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(artUri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(
+                        Icons.Rounded.MusicNote,
+                        contentDescription = null,
+                        tint = White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
 
             // Song info
             Column(modifier = Modifier.weight(1f)) {
