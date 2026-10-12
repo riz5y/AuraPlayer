@@ -65,23 +65,23 @@
 
 ---
 
-## 🔲 Phase 6 — AdMob Integration
-- [ ] Add AdMob dependency + App ID to manifest
-- [ ] `AdManager.kt` singleton (load/show logic)
-- [ ] **Splash Interstitial** — shown once on cold start
-- [ ] **Post-Splash Interstitial** — shown after splash finishes (1× per session)
-- [ ] **Banner Ad** — anchored bottom of LibraryScreen (above mini-player)
-- [ ] Preload next interstitial after show
-- [ ] Respect `isPlaying` — never show interstitial mid-song
+## ✅ Phase 6 — AdMob Integration
+- [x] Add AdMob dependency + App ID to manifest
+- [x] `AdManager.kt` singleton (load/show logic)
+- [x] **Splash Interstitial** — shown once on cold start via `SplashScreen.kt`
+- [x] **Post-Splash Interstitial** — preloads after splash dismissal
+- [x] **Banner Ad** — anchored bottom of LibraryScreen (`BannerAdView.kt`)
+- [x] Preload next interstitial after show
+- [x] Respect `isPlaying` — never show interstitial mid-song
 
 ---
 
-## 🔲 Phase 7 — Polish & Performance
-- [ ] Coil image caching configuration
-- [ ] Palette color extraction optimization (200px bitmap)
-- [ ] Edge-to-edge (`enableEdgeToEdge()`)
-- [ ] Predictive back gesture support
-- [ ] ProGuard/R8 rules for Media3 + AdMob + Room
+## ✅ Phase 7 — Polish & Permissions
+- [x] ProGuard/R8 rules for Media3, AdMob, Room, Coil, Hilt (`proguard-rules.pro`)
+- [x] Runtime Audio & Storage permission handling (`AudioPermissionGate.kt`)
+- [x] Edge-to-edge system bars configuration
+- [x] Dynamic Palette background extraction optimization
+- [ ] Test release build APK
 
 ---
 
