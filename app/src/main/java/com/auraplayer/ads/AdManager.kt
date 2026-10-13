@@ -222,6 +222,40 @@ class AdManager(
         }
     }
 
+    fun showActionInterstitial(activity: Activity, onComplete: () -> Unit) {
+        if (isProUser()) {
+            onComplete()
+            return
+        }
+
+        val ad = sessionAd ?: splashAd
+        if (ad != null) {
+            ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+                override fun onAdDismissedFullScreenContent() {
+                    lastInterstitialShownAt = System.currentTimeMillis()
+                    sessionAd = null
+                    preloadSessionAd()
+                    onComplete()
+                }
+                override fun onAdFailedToShowFullScreenContent(e: AdError) {
+                    sessionAd = null
+                    preloadSessionAd()
+                    onComplete()
+                }
+            }
+            ad.show(activity)
+        } else {
+            val video = rewardedAd
+            if (video != null) {
+                showRewardedVideo(activity, onRewarded = onComplete, onClosed = onComplete)
+            } else {
+                preloadSessionAd()
+                preloadRewardedAd()
+                onComplete()
+            }
+        }
+    }
+
     private fun showSessionAd(activity: Activity) {
         val ad = sessionAd ?: return
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {

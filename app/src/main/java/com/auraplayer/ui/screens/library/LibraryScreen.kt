@@ -1,5 +1,6 @@
 package com.auraplayer.ui.screens.library
 
+import android.app.Activity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
@@ -72,6 +73,7 @@ fun LibraryScreen(
     var showImportSheet by remember { mutableStateOf(false) }
     var showEqualizerSheet by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -129,7 +131,14 @@ fun LibraryScreen(
                 // Custom Equalizer Button
                 BounceIconButton(
                     icon = Icons.Rounded.GraphicEq,
-                    onClick = { showEqualizerSheet = true }
+                    onClick = {
+                        val activity = context as? Activity
+                        if (!isPro && adManager != null && activity != null) {
+                            adManager.showActionInterstitial(activity) { showEqualizerSheet = true }
+                        } else {
+                            showEqualizerSheet = true
+                        }
+                    }
                 )
 
                 Spacer(Modifier.width(12.dp))
@@ -137,7 +146,14 @@ fun LibraryScreen(
                 // Import Music Button
                 BounceIconButton(
                     icon = Icons.Rounded.CloudUpload,
-                    onClick = { showImportSheet = true }
+                    onClick = {
+                        val activity = context as? Activity
+                        if (!isPro && adManager != null && activity != null) {
+                            adManager.showActionInterstitial(activity) { showImportSheet = true }
+                        } else {
+                            showImportSheet = true
+                        }
+                    }
                 )
 
                 Spacer(Modifier.width(12.dp))

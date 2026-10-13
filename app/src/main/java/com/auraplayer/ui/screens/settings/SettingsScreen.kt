@@ -1,5 +1,6 @@
 package com.auraplayer.ui.screens.settings
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -162,7 +163,14 @@ fun SettingsScreen(
                 icon = Icons.Rounded.GraphicEq,
                 title = "Studio 5-Band Hardware EQ",
                 subtitle = "Custom frequency curves, bass boost & 3D spatializer",
-                onClick = { showEqualizerSheet = true }
+                onClick = {
+                    val activity = context as? Activity
+                    if (!isPro && adManager != null && activity != null) {
+                        adManager.showActionInterstitial(activity) { showEqualizerSheet = true }
+                    } else {
+                        showEqualizerSheet = true
+                    }
+                }
             )
 
             HorizontalDivider(color = Outline, thickness = 0.5.dp)
@@ -319,7 +327,14 @@ fun SettingsScreen(
                 icon = Icons.Rounded.Devices,
                 title = "PC & Cloud Transfer Hub",
                 subtitle = "Wireless Wi-Fi drag & drop from computer or Google Drive",
-                onClick = { showWifiCloudSheet = true }
+                onClick = {
+                    val activity = context as? Activity
+                    if (!isPro && adManager != null && activity != null) {
+                        adManager.showActionInterstitial(activity) { showWifiCloudSheet = true }
+                    } else {
+                        showWifiCloudSheet = true
+                    }
+                }
             )
 
             HorizontalDivider(color = Outline, thickness = 0.5.dp)
@@ -328,7 +343,14 @@ fun SettingsScreen(
                 icon = Icons.Rounded.CloudUpload,
                 title = "Import Music Files (SAF)",
                 subtitle = "Select audio from device storage or cloud drives",
-                onClick = { showImportSheet = true }
+                onClick = {
+                    val activity = context as? Activity
+                    if (!isPro && adManager != null && activity != null) {
+                        adManager.showActionInterstitial(activity) { showImportSheet = true }
+                    } else {
+                        showImportSheet = true
+                    }
+                }
             )
 
             HorizontalDivider(color = Outline, thickness = 0.5.dp)

@@ -6,6 +6,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.auraplayer.ads.AdManager
+import com.auraplayer.core.audio.EqualizerManager
 import com.auraplayer.ui.theme.DeepBlack
 
 /**
@@ -16,6 +18,8 @@ import com.auraplayer.ui.theme.DeepBlack
 @Composable
 fun NowPlayingModal(
     viewModel: NowPlayingViewModel,
+    equalizerManager: EqualizerManager? = null,
+    adManager: AdManager? = null,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -30,6 +34,8 @@ fun NowPlayingModal(
         NowPlayingScreen(
             viewModel = viewModel,
             onCollapse = onDismiss,
+            equalizerManager = equalizerManager,
+            adManager = adManager,
             modifier = Modifier.fillMaxSize()
         )
     }
